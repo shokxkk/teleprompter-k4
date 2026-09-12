@@ -130,6 +130,8 @@ Har bir ssenariyda aniq struktura bor:
       },
     ],
   },
+];
+
 interface ShootingPageClientProps {
   readyItems: ContentItem[];
 }
