@@ -4,15 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Session } from "next-auth";
 import {
-  LayoutDashboard,
-  MessageSquare,
-  Layers,
-  BookOpen,
-  Calendar,
   Camera,
-  BarChart2,
-  LogOut,
   Sparkles,
+  Mail,
+  Send,
 } from "lucide-react";
 
 const NAV_ITEMS = [
