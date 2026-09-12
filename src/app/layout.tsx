@@ -10,30 +10,30 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Brand Office",
-    template: "%s — Brand Office",
+    default: "sufler.uz — Профессиональный Онлайн Телесуфлёр k4",
+    template: "%s — sufler.uz",
   },
   description:
-    "Персональная AI-команда для развития личного бренда в Instagram. Адаптивное интервью, сценарии Reels, контент-план и аналитика.",
+    "sufler.uz — Удобный профессиональный онлайн телесуфлёр k4 для записи видео, Reels, роликов и выступлений. Поддержка Word, PPTX, Фото и Текста.",
   keywords: [
-    "личный бренд",
-    "Instagram",
-    "контент-план",
-    "AI продюсер",
-    "Reels сценарий",
-    "shaxsiy brend",
-    "instagram kontent",
+    "sufler.uz",
+    "телесуфлер",
+    "онлайн суфлер",
+    "телесуфлёр k4",
+    "Reels суфлер",
+    "sufler uzbekistan",
+    "видео съемка",
   ],
-  authors: [{ name: "Brand Office" }],
-  creator: "Brand Office",
+  authors: [{ name: "sufler.uz" }],
+  creator: "sufler.uz",
   robots: {
-    index: false, // Private app
-    follow: false,
+    index: true,
+    follow: true,
   },
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    siteName: "Brand Office",
+    siteName: "sufler.uz",
   },
 };
 

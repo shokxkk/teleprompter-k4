@@ -558,11 +558,14 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
     URL.revokeObjectURL(url);
   };
 
-  // Upload File handler with clean async/await & guaranteed instant display
-  // Upload File handler with instant client display & background database sync
+  // Upload File handler with fast client-side parsing & 0 server load
   const handleFileUpload = async (file: File) => {
     setIsUploading(true);
     setUploadError(null);
+
+    // Yield to event loop to render loading overlay instantly
+    await new Promise((res) => setTimeout(res, 50));
+
     try {
       const fileTitle = file.name.replace(/\.[^/.]+$/, "");
       const ext = file.name.toLowerCase().includes(".") ? file.name.toLowerCase().split(".").pop() : "";
@@ -579,8 +582,29 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
         const mime = file.type || `image/${ext || "jpeg"}`;
         imageUrl = `data:${mime};base64,${base64}`;
         scriptText = `[Изображение: ${file.name}]`;
-      } else {
-        // 2. Try Mammoth arrayBuffer parsing FIRST for any document
+      } 
+      // 2. If PDF file — fast text extraction without hanging UI thread
+      else if (ext === "pdf" || file.type === "application/pdf") {
+        fileType = "text";
+        try {
+          const rawText = await file.text();
+          const textMatches = rawText.match(/\(([^\(\)\\]+|\\.)*\)\s*Tj|\[([^\[\]]+)\]\s*TJ/g);
+          if (textMatches && textMatches.length > 0) {
+            scriptText = textMatches
+              .map((m) => m.replace(/[\(\)\[\]]|Tj|TJ/g, "").trim())
+              .filter(Boolean)
+              .join(" ");
+          }
+          if (!scriptText || scriptText.length < 15) {
+            const cleanChars = rawText.replace(/[^\x20-\x7E\u0400-\u04FF\s]/g, " ").replace(/\s+/g, " ");
+            scriptText = cleanChars.slice(0, 20000).trim();
+          }
+        } catch (pdfErr) {
+          console.warn("PDF extraction warning:", pdfErr);
+        }
+      } 
+      // 3. Word (.docx) Files
+      else {
         try {
           const arrayBuffer = await file.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer });
@@ -591,11 +615,11 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
           console.warn("Client mammoth extraction warning:", mErr);
         }
 
-        // 3. If mammoth didn't extract text (e.g. .txt, .md, .csv), read text with file.text()
+        // 4. Plain Text / Markdown / CSV Fallback
         if (!scriptText) {
           try {
             const rawText = await file.text();
-            scriptText = rawText.trim();
+            scriptText = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "").trim();
           } catch (tErr) {
             console.warn("file.text() error:", tErr);
           }
@@ -607,11 +631,11 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
         scriptText = `Сценарий из файла ${file.name}`;
       }
 
-      // 4. Create local item and update state IMMEDIATELY for zero delay & 100% reliability
+      // 5. Create local item and update state IMMEDIATELY with 0 server load
       const tempId = `local-${Date.now()}`;
       const tempItem: ContentItem = {
         id: tempId,
-        title: fileTitle || "Документ Word",
+        title: fileTitle || "Документ",
         type: fileType,
         editorialStatus: "approved",
         productionStatus: "ready_to_shoot",
@@ -878,8 +902,8 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
           }}
         >
           <div className="spinner" style={{ width: 48, height: 48, borderWidth: 4, borderColor: "rgba(250, 204, 21, 0.3)", borderTopColor: "#facc15", marginBottom: "1.5rem" }} />
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>Читаю файл Word...</h2>
-          <p style={{ color: "#a1a1aa", marginTop: "0.5rem" }}>Извлекаю текст и добавляю в Телесуфлёр k4</p>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ffffff" }}>Быстрое чтение документа...</h2>
+          <p style={{ color: "#a1a1aa", marginTop: "0.5rem" }}>Извлекаю текст и открываю в sufler.uz Телесуфлёре k4</p>
         </div>
       )}
 
@@ -911,11 +935,11 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
                 }}
               />
               <div>
-                <h2 style={{ fontSize: "1.05rem", margin: 0, fontWeight: 700, color: "var(--color-brand-600)", lineHeight: 1.2 }}>
-                  Телесуфлёр k4
+                <h2 style={{ fontSize: "1.05rem", margin: 0, fontWeight: 800, color: "#4f46e5", lineHeight: 1.2, letterSpacing: "-0.3px" }}>
+                  sufler.uz
                 </h2>
-                <span style={{ fontSize: "0.72rem", color: "var(--color-text-tertiary)", fontWeight: 500 }}>
-                  Профессиональная версия
+                <span style={{ fontSize: "0.72rem", color: "var(--color-text-tertiary)", fontWeight: 600 }}>
+                  Телесуфлёр k4
                 </span>
               </div>
             </div>

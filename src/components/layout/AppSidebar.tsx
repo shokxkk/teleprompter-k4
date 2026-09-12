@@ -31,26 +31,29 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <aside className="sidebar">
-      {/* Logo */}
+      {/* Logo & Brand Header */}
       <div style={{ padding: "1.25rem 1rem", borderBottom: "1px solid var(--color-border)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <div style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}>
-            <Sparkles size={16} color="white" />
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+          <img
+            src="/logo.png"
+            alt="sufler.uz логотип"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              objectFit: "cover",
+              boxShadow: "0 0 12px rgba(99, 102, 241, 0.35)",
+              border: "1px solid rgba(99, 102, 241, 0.4)",
+              flexShrink: 0,
+            }}
+          />
           <div>
-            <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--color-text-primary)", lineHeight: 1.2 }}>
+            <div style={{ fontWeight: 800, fontSize: "1rem", color: "#4f46e5", lineHeight: 1.2, letterSpacing: "-0.3px" }}>
+              sufler.uz
+            </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--color-text-tertiary)", fontWeight: 600 }}>
               Телесуфлёр k4
             </div>
-            <div style={{ fontSize: "0.7rem", color: "var(--color-text-tertiary)" }}>Профессиональная версия</div>
           </div>
         </div>
       </div>
