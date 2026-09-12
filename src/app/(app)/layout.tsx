@@ -10,11 +10,14 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/auth/login");
-  }
+  const session = (await auth()) ?? {
+    user: {
+      id: "public-k4-user",
+      name: "Пользователь k4",
+      email: "public@teleprompterk4.com",
+    },
+    expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  };
 
   return (
     <AuthProvider session={session}>
