@@ -1,0 +1,687 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================================================
+// AUTH
+// ================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  passwordHash  String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  workspace   Workspace?
+  sessions    Session[]
+  accounts    Account[]
+  auditEvents AuditEvent[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ================================================================
+// WORKSPACE
+// ================================================================
+
+model Workspace {
+  id        String   @id @default(cuid())
+  ownerId   String   @unique
+  name      String
+  timezone  String   @default("Asia/Tashkent")
+  uiLang    String   @default("ru")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner              User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  brandProfiles      BrandProfile[]
+  services           Service[]
+  conversations      Conversation[]
+  interviewQuestions InterviewQuestion[]
+  sources            Source[]
+  facts              Fact[]
+  stylePreferences   StylePreference[]
+  contentPlans       ContentPlan[]
+  contentItems       ContentItem[]
+  inquiries          Inquiry[]
+  weeklyReports      WeeklyReport[]
+  workflowRuns       WorkflowRun[]
+  assets             Asset[]
+  settings           WorkspaceSettings?
+
+  @@map("workspaces")
+}
+
+model WorkspaceSettings {
+  id                     String   @id @default(cuid())
+  workspaceId            String   @unique
+  publicationsPerWeek    Int      @default(7)
+  reelsPerWeek           Int      @default(4)
+  carouselsPerWeek       Int      @default(3)
+  storiesPerWeek         Int      @default(3)
+  storiesFramesPerDay    Int      @default(2)
+  maxSalesPostsPerWeek   Int      @default(2)
+  llmProvider            String   @default("openai")
+  llmModel               String   @default("gpt-4o-mini")
+  sttProvider            String   @default("openai")
+  demoMode               Boolean  @default(false)
+  dailyTokenLimit        Int      @default(100000)
+  maxParallelGenerations Int      @default(2)
+  updatedAt              DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("workspace_settings")
+}
+
+// ================================================================
+// BRAND PROFILE
+// ================================================================
+
+model BrandProfile {
+  id          String   @id @default(cuid())
+  workspaceId String
+  isCurrent   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  versions  BrandVersion[]
+
+  @@map("brand_profiles")
+}
+
+model BrandVersion {
+  id             String   @id @default(cuid())
+  brandProfileId String
+  versionNumber  Int
+  status         String   @default("draft") // draft | active | archived
+  // Personal info
+  publicName     String?
+  publicNameUz   String?
+  role           String?
+  geography      String?
+  bio            String?
+  bioUz          String?
+  startYear      Int?     @default(2020)
+  // Audience
+  primaryAudience     String?
+  secondaryAudience   String?
+  audienceProblems    Json?    @default("[]")
+  // Voice & style
+  brandVoice     String?
+  voiceExamples  Json?    @default("[]")
+  // Goals
+  goals3to6months String?
+  followerTarget Int?
+  // Languages
+  contentLang    String   @default("uz-Latn")
+  interfaceLang  String   @default("ru")
+  // Positioning
+  selectedPositioningId String?
+  // Limitations (what NOT to do)
+  limitations    Json?    @default("[]")
+  // Meta
+  createdAt      DateTime @default(now())
+  createdBy      String?
+  notes          String?
+
+  brandProfile BrandProfile         @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+  positionings PositioningOption[]
+  approvals    BrandApproval[]
+  contentItems ContentItem[]
+
+  @@map("brand_versions")
+}
+
+model PositioningOption {
+  id             String   @id @default(cuid())
+  brandVersionId String
+  status         String   @default("proposed") // proposed | selected | rejected
+  textUz         String
+  explanationRu  String
+  rationale      String?
+  createdAt      DateTime @default(now())
+
+  brandVersion BrandVersion @relation(fields: [brandVersionId], references: [id], onDelete: Cascade)
+
+  @@map("positioning_options")
+}
+
+model BrandApproval {
+  id             String   @id @default(cuid())
+  brandVersionId String
+  approvedBy     String
+  approvedAt     DateTime @default(now())
+
+  brandVersion BrandVersion @relation(fields: [brandVersionId], references: [id], onDelete: Cascade)
+
+  @@map("brand_approvals")
+}
+
+model Service {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  name             String
+  clientProblem    String?
+  confirmedContent String?
+  pendingQuestions Json?    @default("[]")
+  ctaText          String?
+  price            Decimal?
+  currency         String?
+  timeline         String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("services")
+}
+
+// ================================================================
+// CONVERSATION & INTERVIEW
+// ================================================================
+
+model Conversation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  type        String   @default("producer") // producer | interview
+  lang        String   @default("ru")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  messages     Message[]
+  workflowRuns WorkflowRun[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // user | assistant | system
+  content        String
+  attachments    Json?    @default("[]")
+  factIds        Json?    @default("[]")
+  workflowRunId  String?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model InterviewQuestion {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  questionText String
+  purpose      String
+  knowledgeField String
+  status       String   @default("pending") // pending | answered | skipped
+  answer       String?
+  answeredAt   DateTime?
+  proposedFacts Json?   @default("[]")
+  orderIndex   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("interview_questions")
+}
+
+// ================================================================
+// SOURCES, FACTS, STYLE
+// ================================================================
+
+model Source {
+  id                String   @id @default(cuid())
+  workspaceId       String
+  type              String   // note | audio | transcript | file | url
+  // Knowledge type
+  knowledgeType     String   @default("user_reported_fact")
+  // user_reported_fact | observation | hypothesis | preference | teaching_example
+  verificationStatus String  @default("pending")
+  // pending | user_confirmed | evidence_attached | disputed | retracted
+  // Permissions
+  publicationPermission String @default("pending")
+  // pending | internal_only | anonymous_allowed | public_allowed
+  permissionScope   Json?    @default("{}") // { name, numbers, quote, image, personal }
+  // Content
+  title             String?
+  content           String?
+  fileAssetId       String?
+  transcription     String?
+  transcriptionStatus String? // pending | processing | done | failed
+  url               String?
+  tags              Json?    @default("[]")
+  usedInContentIds  Json?    @default("[]")
+  confirmedBy       String?
+  confirmedAt       DateTime?
+  retractedAt       DateTime?
+  retractedReason   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  facts     Fact[]
+
+  @@map("sources")
+}
+
+model Fact {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  sourceId         String?
+  claim            String
+  unit             String?
+  numericValue     Decimal?
+  evidenceStatus   String   @default("pending")
+  publicationPermission String @default("pending")
+  limitations      String?
+  // For cases
+  isCase           Boolean  @default(false)
+  caseClientProblem String?
+  caseMetrics      String?
+  caseRole         String?
+  caseActions      String?
+  casePeriod       String?
+  caseResult       String?
+  caseConfirmation String?
+  caseConfounders  String?
+  caseConclusion   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  source    Source?   @relation(fields: [sourceId], references: [id])
+
+  @@map("facts")
+}
+
+model StylePreference {
+  id          String   @id @default(cuid())
+  workspaceId String
+  rule        String
+  scope       String   @default("local") // local | global
+  isActive    Boolean  @default(true)
+  examples    Json?    @default("[]")
+  confirmedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("style_preferences")
+}
+
+// ================================================================
+// CONTENT PLAN & ITEMS
+// ================================================================
+
+model ContentPlan {
+  id          String   @id @default(cuid())
+  workspaceId String
+  weekStart   DateTime
+  weekEnd     DateTime
+  status      String   @default("draft") // draft | active | archived
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  items     PlanItem[]
+
+  @@map("content_plans")
+}
+
+model PlanItem {
+  id            String   @id @default(cuid())
+  contentPlanId String
+  contentItemId String?
+  scheduledDate DateTime?
+  format        String   // reel | carousel | story | pinned
+  audience      String   // owner | sales_leader | sales_manager
+  goal          String   // awareness | trust | save | discussion | inquiry | learning_research
+  topic         String?
+  section       String?
+  productionComplexity String? // simple | medium | complex
+  requiredSources Json?  @default("[]")
+  orderIndex    Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  contentPlan ContentPlan  @relation(fields: [contentPlanId], references: [id], onDelete: Cascade)
+  contentItem ContentItem? @relation(fields: [contentItemId], references: [id])
+
+  @@map("plan_items")
+}
+
+model ContentItem {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  brandVersionId String?
+  type           String   // reel | carousel | story | pinned
+  // Editorial status
+  editorialStatus String  @default("idea")
+  // idea | needs_input | draft | in_review | needs_changes | ready_for_approval | approved
+  // Production status
+  productionStatus String @default("not_started")
+  // not_started | ready_to_shoot | shot | scheduled | published | archived
+  title          String?
+  isPinnedCandidate Boolean @default(false)
+  pinnedConfirmed Boolean @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  workspace    Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  brandVersion BrandVersion?   @relation(fields: [brandVersionId], references: [id])
+  versions     ContentVersion[]
+  planItems    PlanItem[]
+  publications Publication[]
+  metrics      MetricSnapshot[]
+
+  @@map("content_items")
+}
+
+model ContentVersion {
+  id            String   @id @default(cuid())
+  contentItemId String
+  versionNumber Int
+  payload       Json     // ReelDraft | CarouselDraft | StoryDraft (typed JSON)
+  lockedSections Json?   @default("[]")
+  createdAt     DateTime @default(now())
+  createdBy     String?
+  changeNote    String?
+
+  contentItem    ContentItem     @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  claimRefs      ClaimReference[]
+  reviews        Review[]
+  approvals      ContentApproval[]
+
+  @@map("content_versions")
+}
+
+model ClaimReference {
+  id               String  @id @default(cuid())
+  contentVersionId String
+  field            String
+  fragment         String?
+  factId           String?
+  sourceId         String?
+
+  contentVersion ContentVersion @relation(fields: [contentVersionId], references: [id], onDelete: Cascade)
+
+  @@map("claim_references")
+}
+
+// ================================================================
+// REVIEW & APPROVAL
+// ================================================================
+
+model Review {
+  id               String   @id @default(cuid())
+  contentVersionId String
+  status           String   @default("pending") // pending | done
+  createdAt        DateTime @default(now())
+  completedAt      DateTime?
+
+  contentVersion ContentVersion @relation(fields: [contentVersionId], references: [id], onDelete: Cascade)
+  issues         ReviewIssue[]
+
+  @@map("reviews")
+}
+
+model ReviewIssue {
+  id         String   @id @default(cuid())
+  reviewId   String
+  severity   String   // blocker | warning | suggestion
+  field      String?
+  fragment   String?
+  reason     String
+  suggestion String?
+  resolution String?  // fixed | accepted | dismissed
+  resolvedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_issues")
+}
+
+model ContentApproval {
+  id               String   @id @default(cuid())
+  contentVersionId String
+  brandVersionId   String?
+  approvedBy       String
+  approvedAt       DateTime @default(now())
+  idempotencyKey   String   @unique
+
+  contentVersion ContentVersion @relation(fields: [contentVersionId], references: [id], onDelete: Cascade)
+
+  @@map("content_approvals")
+}
+
+model Publication {
+  id               String   @id @default(cuid())
+  contentItemId    String
+  contentVersionId String
+  publishedAt      DateTime
+  url              String?
+  note             String?
+  createdAt        DateTime @default(now())
+
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@map("publications")
+}
+
+// ================================================================
+// ANALYTICS
+// ================================================================
+
+model MetricSnapshot {
+  id              String   @id @default(cuid())
+  contentItemId   String?
+  workspaceId     String?
+  scope           String   @default("post") // post | account
+  measuredAt      DateTime
+  windowDays      Int?
+  source          String   @default("manual")
+  views           Int?
+  reach           Int?
+  avgWatchSeconds Decimal?
+  saves           Int?
+  shares          Int?
+  comments        Int?
+  profileVisits   Int?
+  follows         Int?
+  likes           Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  contentItem ContentItem? @relation(fields: [contentItemId], references: [id])
+
+  @@map("metric_snapshots")
+}
+
+model Inquiry {
+  id                String   @id @default(cuid())
+  workspaceId       String
+  date              DateTime @default(now())
+  contactType       String?  // owner | manager | other
+  businessNiche     String?
+  teamSize          Int?
+  task              String?
+  interestedService String?
+  source            String?
+  sourceContentId   String?
+  sourceAttribution String   @default("unknown")
+  // unknown | confirmed_by_user | self_reported | inferred
+  status            String   @default("new")
+  // new | discussing | meeting | proposal | won | lost
+  fitScore          String?  // good | neutral | poor
+  fitReason         String?
+  trainingInterest  Boolean  @default(false)
+  dealAmount        Decimal?
+  dealCurrency      String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("inquiries")
+}
+
+model WeeklyReport {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  periodStart  DateTime
+  periodEnd    DateTime
+  snapshotIds  Json?    @default("[]")
+  observations Json?    @default("[]")
+  hypothesis   String?
+  metric       String?
+  experiment   String?
+  suggestions  Json?    @default("[]")
+  warnings     Json?    @default("[]")
+  createdAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("weekly_reports")
+}
+
+// ================================================================
+// WORKFLOW & AI RUNS
+// ================================================================
+
+model WorkflowRun {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  conversationId String?
+  type           String   // generate_reel | generate_week | generate_carousel | interview | review | analyze
+  status         String   @default("queued")
+  // queued | running | waiting_for_user | succeeded | failed | cancelled
+  input          Json?
+  checkpoint     Json?    // last saved step state
+  resultId       String?  // content item id if applicable
+  errorMessage   String?
+  partialResult  Json?
+  totalLlmCalls  Int      @default(0)
+  idempotencyKey String?  @unique
+  createdAt      DateTime @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  workspace    Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id])
+  agentRuns    AgentRun[]
+
+  @@map("workflow_runs")
+}
+
+model AgentRun {
+  id            String   @id @default(cuid())
+  workflowRunId String
+  agentRole     String   // producer | interviewer | strategist | planner | scriptwriter | repurposer | uzbek_editor | reviewer | analyst
+  promptVersion String
+  provider      String
+  model         String
+  inputTokens   Int?
+  outputTokens  Int?
+  durationMs    Int?
+  retryCount    Int      @default(0)
+  resultSource  String   @default("live") // live | demo | cached
+  status        String   @default("pending") // pending | running | done | failed
+  providerRequestId String?
+  createdAt     DateTime @default(now())
+
+  workflowRun WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+
+  @@map("agent_runs")
+}
+
+// ================================================================
+// ASSETS & AUDIT
+// ================================================================
+
+model Asset {
+  id          String   @id @default(cuid())
+  workspaceId String
+  storageKey  String   @unique
+  mimeType    String
+  sizeBytes   Int
+  filename    String?
+  status      String   @default("uploaded") // uploaded | processing | ready | failed
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("assets")
+}
+
+model AuditEvent {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_events")
+}
