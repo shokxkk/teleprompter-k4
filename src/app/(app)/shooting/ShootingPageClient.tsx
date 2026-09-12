@@ -53,6 +53,31 @@ interface ContentItem {
 
 const DEFAULT_K4_ITEMS: ContentItem[] = [
   {
+    id: "shoxjaxon-sales-script-1",
+    title: "✍️ [НАМУНА] Shoxjaxon Karimov - Sotuv Bo'limi Rahbari",
+    type: "reels_script",
+    editorialStatus: "approved",
+    productionStatus: "ready_to_shoot",
+    versions: [
+      {
+        id: "ver-shoxjaxon-1",
+        versionNumber: 1,
+        payload: {
+          title: "✍️ [НАМУНА] Shoxjaxon Karimov - Sotuv Bo'limi Rahbari",
+          spokenText: `HOOK: Sotuvga kirganimda, e’londagi ish aslida to‘g‘ridan to‘g‘ri sotuv agenti ekanini bilmaganman. [Пауза 1 сек]
+
+PROBLEM: 2020 yil, koronavirus davri edi. Menejer vakansiyasini ko‘rdim. Shu ish orqali sotuvdagi yo‘lim boshlandi. [Улыбнитесь!] Bugun men Shoxjaxon Karimov, Marketing Markazi’da sotuv bo‘limi rahbariman. Jamoalar bilan ishlaganda egalarni qiynaydigan savolni eshitaman: [Акцент!] nega bo‘lim mening ishtirokimsiz ishlamaydi?
+
+INSIGHT: Bu sahifada aynan shu savolni ochib boraman. Natijani faqat menejerning gapirishiga bog‘lab qo‘ymasdan, butun jarayonni ko‘rib chiqamiz.
+
+SOLUTION: CRM’da vazifa qanday qo‘yiladi, qo‘ng‘iroq qanday tahlil qilinadi, KPI qanday hisoblanadi — oddiy misollarda tushuntiraman. [Акцент!] Ko‘rsatkichni ko‘rsatganimda, nimadan hisoblanganini ham aytaman. Siz esa o‘z bo‘limingizni shu mezonlar orqali tekshirib ko‘rishingiz mumkin.
+
+CTA: [Улыбнитесь!] Sizni ko‘proq nima qiynayapti: CRM, menejerlar yoki reja? Kommentda yozing.`,
+        },
+      },
+    ],
+  },
+  {
     id: "guide-k4-instruction",
     title: "📋 [ИНСТРУКЦИЯ] Телесуфлёр k4 - Использование",
     type: "reels_script",
@@ -242,6 +267,7 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
   const [manualText, setManualText] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addModalTab, setAddModalTab] = useState<"text" | "file">("text");
 
   // Edit Script modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -990,6 +1016,32 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
                 }}
               />
             </label>
+
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setAddModalTab("text");
+                setShowAddModal(true);
+              }}
+              style={{
+                width: "100%",
+                marginTop: "0.5rem",
+                background: "#4f46e5",
+                color: "#ffffff",
+                fontWeight: 600,
+                fontSize: "0.82rem",
+                padding: "0.55rem 0.75rem",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.4rem",
+                boxShadow: "0 2px 8px rgba(79, 70, 229, 0.3)",
+              }}
+            >
+              <Edit3 size={15} />
+              ✍️ Вставить текст вручную (без Word)
+            </button>
           </div>
 
           {/* Items List */}
@@ -1134,6 +1186,29 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
               style={{ background: "#27272a", color: "#e4e4e7", border: "none", padding: "0.45rem 0.6rem" }}
             >
               <RotateCcw size={16} />
+            </button>
+
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => {
+                setAddModalTab("text");
+                setShowAddModal(true);
+              }}
+              title="Быстро вставить новый текст вручную"
+              style={{
+                background: "#065f46",
+                color: "#a7f3d0",
+                border: "1px solid #059669",
+                fontSize: "0.8rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                padding: "0.45rem 0.75rem",
+                fontWeight: 600,
+              }}
+            >
+              <Plus size={15} />
+              ✍️ Вставить текст
             </button>
 
             {/* Edit Text Button */}
@@ -1477,7 +1552,7 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
             position: "absolute",
             inset: 0,
             zIndex: 100,
-            background: "rgba(0,0,0,0.7)",
+            background: "rgba(0,0,0,0.75)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -1485,67 +1560,147 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
             backdropFilter: "blur(4px)",
           }}
         >
-          <div className="card" style={{ width: "100%", maxWidth: 540, padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>
-              Добавить документ в Телесуфлёр k4
-            </h3>
+          <div className="card" style={{ width: "100%", maxWidth: 640, padding: "1.75rem", background: "#18181b", border: "1px solid #3f3f46", color: "#f4f4f5" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0, color: "#ffffff", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                ➕ Добавить сценарий в Телесуфлёр k4
+              </h3>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowAddModal(false)}
+                style={{ background: "#27272a", color: "#fff", border: "none", borderRadius: "50%", width: 30, height: 30, padding: 0 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "1.25rem", borderBottom: "1px solid #27272a", paddingBottom: "0.75rem" }}>
+              <button
+                onClick={() => setAddModalTab("text")}
+                style={{
+                  flex: 1,
+                  padding: "0.6rem 1rem",
+                  borderRadius: "8px",
+                  fontSize: "0.88rem",
+                  fontWeight: 700,
+                  border: addModalTab === "text" ? "2px solid #6366f1" : "1px solid #3f3f46",
+                  background: addModalTab === "text" ? "#312e81" : "#27272a",
+                  color: addModalTab === "text" ? "#ffffff" : "#a1a1aa",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                <Edit3 size={16} /> ✍️ Вставить текст вручную
+              </button>
+              <button
+                onClick={() => setAddModalTab("file")}
+                style={{
+                  flex: 1,
+                  padding: "0.6rem 1rem",
+                  borderRadius: "8px",
+                  fontSize: "0.88rem",
+                  fontWeight: 700,
+                  border: addModalTab === "file" ? "2px solid #6366f1" : "1px solid #3f3f46",
+                  background: addModalTab === "file" ? "#312e81" : "#27272a",
+                  color: addModalTab === "file" ? "#ffffff" : "#a1a1aa",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                <Upload size={16} /> 📁 Загрузить файл
+              </button>
+            </div>
 
             {uploadError && (
-              <div style={{ background: "#fee2e2", color: "#dc2626", padding: "0.75rem", borderRadius: "8px", marginBottom: "1rem", fontSize: "0.85rem" }}>
+              <div style={{ background: "rgba(239, 68, 68, 0.2)", color: "#f87171", border: "1px solid #ef4444", padding: "0.75rem", borderRadius: "8px", marginBottom: "1rem", fontSize: "0.85rem" }}>
                 {uploadError}
               </div>
             )}
 
-            <div style={{ marginBottom: "1rem" }}>
-              <label className="label">Файл (Word .docx, PowerPoint .pptx, Фото, Text)</label>
-              <input
-                type="file"
-                accept="*/*"
-                className="input"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    handleFileUpload(e.target.files[0]);
-                    e.target.value = "";
-                  }
-                }}
-              />
-            </div>
+            {addModalTab === "text" ? (
+              <div>
+                <div style={{ marginBottom: "1rem" }}>
+                  <label className="label" style={{ color: "#a1a1aa", marginBottom: "0.4rem" }}>
+                    Название сценария / Видео
+                  </label>
+                  <input
+                    className="input"
+                    placeholder="Например: Shoxjaxon_Reels_Sotuv_1"
+                    value={manualTitle}
+                    onChange={(e) => setManualTitle(e.target.value)}
+                    style={{ background: "#09090b", color: "#fff", borderColor: "#3f3f46" }}
+                  />
+                </div>
 
-            <div className="divider" style={{ margin: "1rem 0" }} />
+                <div style={{ marginBottom: "1.25rem" }}>
+                  <label className="label" style={{ color: "#a1a1aa", marginBottom: "0.4rem" }}>
+                    Текст сценария (Просто скопируйте и вставьте сюда ваш готовый текст)
+                  </label>
+                  <textarea
+                    className="input textarea"
+                    rows={10}
+                    style={{ fontSize: "0.95rem", lineHeight: 1.6, fontFamily: "inherit", background: "#09090b", color: "#fff", borderColor: "#3f3f46" }}
+                    placeholder={`HOOK: Sotuvga kirganimda...
+PROBLEM: 2020 yil koronavirus davri edi...
+SOLUTION: CRM'da vazifa qanday qo'yiladi...
+CTA: Kommentda yozing.`}
+                    value={manualText}
+                    onChange={(e) => setManualText(e.target.value)}
+                    autoFocus
+                  />
+                </div>
 
-            <div style={{ marginBottom: "1rem" }}>
-              <label className="label">Или введите название</label>
-              <input
-                className="input"
-                placeholder="Название файла"
-                value={manualTitle}
-                onChange={(e) => setManualTitle(e.target.value)}
-              />
-            </div>
-
-            <div style={{ marginBottom: "1.25rem" }}>
-              <label className="label">Текст сценария</label>
-              <textarea
-                className="input textarea"
-                rows={6}
-                placeholder="Вставьте готовый текст..."
-                value={manualText}
-                onChange={(e) => setManualText(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-              <button className="btn btn-secondary" onClick={() => setShowAddModal(false)}>
-                Отмена
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleCreateManualScript}
-                disabled={isUploading || !manualText.trim()}
-              >
-                Сохранить
-              </button>
-            </div>
+                <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                  <button className="btn btn-secondary" onClick={() => setShowAddModal(false)} style={{ background: "#27272a", color: "#fff", border: "none" }}>
+                    Отмена
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleCreateManualScript}
+                    disabled={isUploading || !manualText.trim()}
+                    style={{ background: "#4f46e5", padding: "0.6rem 1.5rem", fontWeight: 700 }}
+                  >
+                    💾 Сохранить и читать в суфлёре
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ marginBottom: "1.25rem", padding: "2rem", border: "2px dashed #3f3f46", borderRadius: "12px", textAlign: "center", background: "#09090b" }}>
+                  <Upload size={40} color="#6366f1" style={{ marginBottom: "0.75rem" }} />
+                  <h4 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#fff", marginBottom: "0.3rem" }}>Выберите файл на компьютере или смартфоне</h4>
+                  <p style={{ fontSize: "0.82rem", color: "#a1a1aa", marginBottom: "1rem" }}>
+                    Поддерживаются Word (.docx), PowerPoint (.pptx), Фото (.png, .jpg) и Текст (.txt)
+                  </p>
+                  <input
+                    type="file"
+                    accept="*/*"
+                    className="input"
+                    style={{ maxWidth: 360, margin: "0 auto", background: "#18181b", color: "#fff" }}
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        handleFileUpload(e.target.files[0]);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <button className="btn btn-secondary" onClick={() => setShowAddModal(false)} style={{ background: "#27272a", color: "#fff", border: "none" }}>
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
