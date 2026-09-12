@@ -51,13 +51,117 @@ interface ContentItem {
   }>;
 }
 
-interface ShootingPageClientProps {
-  readyItems: ContentItem[];
-}
+const DEFAULT_K4_ITEMS: ContentItem[] = [
+  {
+    id: "demo-script-1",
+    title: "Shoxjaxon_Reels_51_100_31_kun",
+    type: "reels_script",
+    editorialStatus: "approved",
+    productionStatus: "ready_to_shoot",
+    versions: [
+      {
+        id: "ver-demo-1",
+        versionNumber: 1,
+        payload: {
+          title: "Shoxjaxon_Reels_51_100_31_kun",
+          spokenText: `Instagram uchunyana 50 ta Reels 2 oy [Пауза 2 сек]
+51-100 ssenariylar 31-60 kunlar Marketing Markazi Sotuv bo'limi rahbari.
+
+[Улыбнитесь!] Ushbu hujjat O'zbekistondagi biznes egalari orasida ekspertlikni ko'rsatish, sotuv bo'limini boshqarish bo'yicha foyda berish va mos murojaatlar olish uchun tayyorlandi.
+
+[Акцент!] Asosiy auditoriya - rivojlanayotgan, katta sotuv bo'limi bor yoki qurmoqchi bo'lgan tadbirkorlar.
+
+Har bir ssenariyda aniq struktura bor:
+1. Kuchli ilmoq (Hook)
+2. Asosiy muammo va yechim
+3. Harakatga da'vat (CTA)
+
+[Пауза 1 сек] Diqqat bilan o'qing va videolarni tasvirga olishni boshlang!`,
+        },
+      },
+    ],
+  },
+  {
+    id: "demo-script-2",
+    title: "Shoxjaxon_50_Reels_30_kun",
+    type: "reels_script",
+    editorialStatus: "approved",
+    productionStatus: "ready_to_shoot",
+    versions: [
+      {
+        id: "ver-demo-2",
+        versionNumber: 1,
+        payload: {
+          title: "Shoxjaxon_50_Reels_30_kun",
+          spokenText: `Sotuv bo'limini 2 baravar oshirish sirlari.
+
+[Улыбнитесь!] Salom tadbirkor! Bugun sotuvchilar KPI va motivatsiyasini qanday to'g'ri yo'lga qo'yish kerakligini ko'rib chiqamiz.
+
+[Акцент!] 3 ta asosiy xato:
+1. Rejasiz ish tutish
+2. Nazorat yo'qligi
+3. Skriptlarsiz gaplashish
+
+[Пауза 2 сек] Videoni saqlab qo'ying va jamoangizga yuboring!`,
+        },
+      },
+    ],
+  },
+  {
+    id: "demo-script-3",
+    title: "[DEMO] Keyingi aloqa narxi",
+    type: "reels_script",
+    editorialStatus: "approved",
+    productionStatus: "ready_to_shoot",
+    versions: [
+      {
+        id: "ver-demo-3",
+        versionNumber: 1,
+        payload: {
+          title: "[DEMO] Keyingi aloqa narxi",
+          spokenText: `Mijozlar bilan aloqa narxi va LTV.
+
+[Пауза 1 сек] Har bir kelgan lid sizga qanchaga tushayapti?
+
+[Акцент!] Agar siz reklama byudjetini tejamasangiz, biznes zarariga ishlaydi.
+
+[Улыбнитесь!] Batafsil ma'lumot olish uchun profilga o'ting!`,
+        },
+      },
+    ],
+  },
+];
 
 export function ShootingPageClient({ readyItems: initialItems }: ShootingPageClientProps) {
-  const [items, setItems] = useState<ContentItem[]>(initialItems);
-  const [selectedId, setSelectedId] = useState<string | null>(initialItems[0]?.id ?? null);
+  const defaultItems = initialItems && initialItems.length > 0 ? initialItems : DEFAULT_K4_ITEMS;
+  const [items, setItems] = useState<ContentItem[]>(defaultItems);
+  const [selectedId, setSelectedId] = useState<string | null>(defaultItems[0]?.id ?? null);
+
+  // Sync with localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("teleprompter_k4_scripts");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setItems(parsed);
+          setSelectedId(parsed[0].id);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load local scripts:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (items.length > 0) {
+        localStorage.setItem("teleprompter_k4_scripts", JSON.stringify(items));
+      }
+    } catch (e) {
+      console.warn("Failed to save local scripts:", e);
+    }
+  }, [items]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [wpm, setWpm] = useState(150); // Words per minute
   const [fontSize, setFontSize] = useState(38);

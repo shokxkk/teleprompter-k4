@@ -77,52 +77,26 @@ export function AppSidebar({ user }: AppSidebarProps) {
         </div>
       </nav>
 
-      {/* User */}
-      <div style={{ padding: "0.75rem 0.5rem", borderTop: "1px solid var(--color-border)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.5rem 0.375rem" }}>
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #c7d2fe, #a5b4fc)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            fontSize: "0.85rem",
-            fontWeight: 600,
-            color: "#4338ca",
-          }}>
-            {user.name?.[0]?.toUpperCase() ?? "U"}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {user.name ?? "Пользователь"}
-            </div>
-            <div style={{ fontSize: "0.7rem", color: "var(--color-text-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {user.email}
-            </div>
-          </div>
-          <button
-            onClick={async () => {
-              try {
-                const csrfRes = await fetch("/api/auth/csrf");
-                const csrfData = await csrfRes.json();
-                await fetch("/api/auth/signout", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                  body: new URLSearchParams({ csrfToken: csrfData.csrfToken, json: "true" }),
-                });
-              } finally {
-                window.location.href = "/auth/login";
-              }
-            }}
-            className="btn btn-ghost btn-icon"
-            title="Выйти"
-            style={{ flexShrink: 0 }}
+      {/* Advertiser Contact Footer */}
+      <div style={{ padding: "0.75rem 0.5rem", borderTop: "1px solid var(--color-border)", background: "rgba(99, 102, 241, 0.04)" }}>
+        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", color: "var(--color-text-tertiary)", marginBottom: "0.5rem", letterSpacing: "0.5px" }}>
+          Реклама и Связь
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          <a
+            href="mailto:shokxk@gmail.com"
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.78rem", color: "#4f46e5", textDecoration: "none", fontWeight: 500 }}
           >
-            <LogOut size={15} />
-          </button>
+            <span>✉️ shokxk@gmail.com</span>
+          </a>
+          <a
+            href="https://t.me/headsales"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.78rem", color: "#0284c7", textDecoration: "none", fontWeight: 500 }}
+          >
+            <span>💬 Telegram: @headsales</span>
+          </a>
         </div>
       </div>
     </aside>
