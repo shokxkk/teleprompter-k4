@@ -141,29 +141,27 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
   const [items, setItems] = useState<ContentItem[]>(defaultItems);
   const [selectedId, setSelectedId] = useState<string | null>(defaultItems[0]?.id ?? null);
 
-  // Sync with localStorage
+  // Sync with per-user private localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("teleprompter_k4_scripts");
-      if (saved) {
+      const saved = localStorage.getItem("teleprompter_k4_user_private_v1");
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setItems(parsed);
-          setSelectedId(parsed[0].id);
+          setSelectedId(parsed[0]?.id ?? null);
         }
       }
     } catch (e) {
-      console.warn("Failed to load local scripts:", e);
+      console.warn("Failed to load private user scripts:", e);
     }
   }, []);
 
   useEffect(() => {
     try {
-      if (items.length > 0) {
-        localStorage.setItem("teleprompter_k4_scripts", JSON.stringify(items));
-      }
+      localStorage.setItem("teleprompter_k4_user_private_v1", JSON.stringify(items));
     } catch (e) {
-      console.warn("Failed to save local scripts:", e);
+      console.warn("Failed to save private user scripts:", e);
     }
   }, [items]);
   const [isPlaying, setIsPlaying] = useState(false);
