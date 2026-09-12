@@ -130,7 +130,9 @@ Har bir ssenariyda aniq struktura bor:
       },
     ],
   },
-];
+interface ShootingPageClientProps {
+  readyItems: ContentItem[];
+}
 
 export function ShootingPageClient({ readyItems: initialItems }: ShootingPageClientProps) {
   const defaultItems = initialItems && initialItems.length > 0 ? initialItems : DEFAULT_K4_ITEMS;
