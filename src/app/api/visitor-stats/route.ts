@@ -1,24 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/server/db";
 
-// In-memory persistent fallback counter for ultra-fast response without DB delays
-interface VisitRecord {
-  id: string;
+// Strict REAL visitor logging without fake seeds or demo offsets
+interface RealVisit {
   visitorId: string;
   date: string; // YYYY-MM-DD
   month: string; // YYYY-MM
   timestamp: number;
-  userAgent?: string;
 }
 
-const memoryVisits: VisitRecord[] = [
-  // Pre-seed realistic initial statistics for sufler.uz launch
-  { id: "seed-1", visitorId: "v-1", date: "2026-09-12", month: "2026-09", timestamp: Date.now() - 3 * 86400000 },
-  { id: "seed-2", visitorId: "v-2", date: "2026-09-13", month: "2026-09", timestamp: Date.now() - 2 * 86400000 },
-  { id: "seed-3", visitorId: "v-3", date: "2026-09-14", month: "2026-09", timestamp: Date.now() - 1 * 86400000 },
-];
-
-let baseTotalOffset = 1240; // Base historical views count for sufler.uz
+const realVisits: RealVisit[] = [];
 
 export async function GET() {
   try {
@@ -29,10 +20,8 @@ export async function GET() {
 
     let todayCount = 0;
     let monthCount = 0;
-    let totalCount = baseTotalOffset;
-    let onlineNow = 1;
+    let totalCount = 0;
 
-    // Try counting from Database first
     try {
       const todayDb = await prisma.auditEvent.count({
         where: {
@@ -52,36 +41,24 @@ export async function GET() {
         where: { action: "VISIT" },
       });
 
-      if (totalDb > 0) {
-        todayCount = todayDb;
-        monthCount = monthDb;
-        totalCount = baseTotalOffset + totalDb;
-      } else {
-        // Use memory records
-        todayCount = memoryVisits.filter((v) => v.date === todayStr).length;
-        monthCount = memoryVisits.filter((v) => v.month === monthStr).length;
-        totalCount = baseTotalOffset + memoryVisits.length;
-      }
+      todayCount = Math.max(todayDb, realVisits.filter((v) => v.date === todayStr).length);
+      monthCount = Math.max(monthDb, realVisits.filter((v) => v.month === monthStr).length);
+      totalCount = Math.max(totalDb, realVisits.length);
     } catch {
-      // Fallback to memory
-      todayCount = memoryVisits.filter((v) => v.date === todayStr).length;
-      monthCount = memoryVisits.filter((v) => v.month === monthStr).length;
-      totalCount = baseTotalOffset + memoryVisits.length;
+      todayCount = realVisits.filter((v) => v.date === todayStr).length;
+      monthCount = realVisits.filter((v) => v.month === monthStr).length;
+      totalCount = realVisits.length;
     }
 
-    // Always ensure healthy initial stats for new site launch
-    todayCount = Math.max(todayCount, 142);
-    monthCount = Math.max(monthCount, 1850);
-    totalCount = Math.max(totalCount, 3420);
-    onlineNow = Math.max(memoryVisits.filter((v) => v.timestamp >= fiveMinsAgo).length, 3);
+    const onlineNow = realVisits.filter((v) => v.timestamp >= fiveMinsAgo).length;
 
-    // Build 7-day chart history
+    // 7-Day real traffic history
     const history: Array<{ date: string; count: number }> = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000);
       const dateStr = d.toISOString().split("T")[0];
       const displayDate = `${d.getDate().toString().padStart(2, "0")}.${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-      const count = memoryVisits.filter((v) => v.date === dateStr).length + Math.floor(100 + (i * 37) % 65);
+      const count = realVisits.filter((v) => v.date === dateStr).length;
       history.push({ date: displayDate, count });
     }
 
@@ -94,10 +71,10 @@ export async function GET() {
     });
   } catch (e) {
     return NextResponse.json({
-      today: 142,
-      thisMonth: 1850,
-      total: 3420,
-      onlineNow: 3,
+      today: 0,
+      thisMonth: 0,
+      total: 0,
+      onlineNow: 0,
       history: [],
     });
   }
@@ -112,19 +89,18 @@ export async function POST(req: Request) {
     const monthStr = now.toISOString().slice(0, 7);
     const userAgent = req.headers.get("user-agent") || undefined;
 
-    // Record in memory
-    memoryVisits.push({
-      id: `v-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
-      visitorId,
-      date: todayStr,
-      month: monthStr,
-      timestamp: Date.now(),
-      userAgent,
-    });
+    // Record real visit if not logged in last 10 minutes from same session
+    const existingRecent = realVisits.find(
+      (v) => v.visitorId === visitorId && Date.now() - v.timestamp < 10 * 60 * 1000
+    );
 
-    // Keep memory array manageable
-    if (memoryVisits.length > 5000) {
-      memoryVisits.splice(0, 1000);
+    if (!existingRecent) {
+      realVisits.push({
+        visitorId,
+        date: todayStr,
+        month: monthStr,
+        timestamp: Date.now(),
+      });
     }
 
     // Record in DB asynchronously if available
@@ -141,7 +117,7 @@ export async function POST(req: Request) {
       // Ignore DB errors safely
     }
 
-    return NextResponse.json({ ok: true, visitorId });
+    return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ ok: true });
   }

@@ -269,11 +269,11 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalTab, setAddModalTab] = useState<"text" | "file">("text");
 
-  // Visitor Analytics State
+  // Visitor Analytics State (Strict Real Counting)
   const [visitorStats, setVisitorStats] = useState<{ today: number; thisMonth: number; total: number }>({
-    today: 142,
-    thisMonth: 1850,
-    total: 3420,
+    today: 0,
+    thisMonth: 0,
+    total: 0,
   });
 
   useEffect(() => {
