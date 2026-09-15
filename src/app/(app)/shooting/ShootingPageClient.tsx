@@ -1158,27 +1158,12 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
               </a>
             </div>
 
-            {/* Live Visitor Stats & Admin Link */}
+            {/* Live Visitor Stats */}
             <div style={{ marginTop: "0.6rem", paddingTop: "0.5rem", borderTop: "1px dashed var(--color-border)", fontSize: "0.72rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 600, color: "var(--color-text-primary)" }}>
                 <span>👥 Сегодня: <strong style={{ color: "#16a34a" }}>{visitorStats.today}</strong></span>
                 <span>📅 Месяц: <strong style={{ color: "#2563eb" }}>{visitorStats.thisMonth}</strong></span>
               </div>
-              <a
-                href="/admin"
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: "inline-block",
-                  marginTop: "0.4rem",
-                  color: "#6366f1",
-                  fontWeight: 700,
-                  fontSize: "0.72rem",
-                  textDecoration: "none",
-                }}
-              >
-                📊 Админ-панель статистики ➔
-              </a>
             </div>
           </div>
         </div>
