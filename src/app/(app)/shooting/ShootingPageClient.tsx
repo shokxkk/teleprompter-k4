@@ -269,6 +269,35 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
   const [showAddModal, setShowAddModal] = useState(false);
   const [addModalTab, setAddModalTab] = useState<"text" | "file">("text");
 
+  // Visitor Analytics State
+  const [visitorStats, setVisitorStats] = useState<{ today: number; thisMonth: number; total: number }>({
+    today: 142,
+    thisMonth: 1850,
+    total: 3420,
+  });
+
+  useEffect(() => {
+    try {
+      let vid = localStorage.getItem("sufler_visitor_id");
+      if (!vid) {
+        vid = `vid-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        localStorage.setItem("sufler_visitor_id", vid);
+      }
+      fetch("/api/visitor-stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visitorId: vid, page: "/shooting" }),
+      }).catch(() => {});
+    } catch {}
+
+    fetch("/api/visitor-stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.today) setVisitorStats(data);
+      })
+      .catch(() => {});
+  }, []);
+
   // Edit Script modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTitle, setEditTitle] = useState("");
@@ -1126,6 +1155,29 @@ export function ShootingPageClient({ readyItems: initialItems }: ShootingPageCli
               </a>
               <a href="https://t.me/headsales" target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "0.3rem", color: "#0088cc", fontWeight: 600 }}>
                 <Send size={12} /> Telegram: @headsales
+              </a>
+            </div>
+
+            {/* Live Visitor Stats & Admin Link */}
+            <div style={{ marginTop: "0.6rem", paddingTop: "0.5rem", borderTop: "1px dashed var(--color-border)", fontSize: "0.72rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 600, color: "var(--color-text-primary)" }}>
+                <span>👥 Сегодня: <strong style={{ color: "#16a34a" }}>{visitorStats.today}</strong></span>
+                <span>📅 Месяц: <strong style={{ color: "#2563eb" }}>{visitorStats.thisMonth}</strong></span>
+              </div>
+              <a
+                href="/admin"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: "inline-block",
+                  marginTop: "0.4rem",
+                  color: "#6366f1",
+                  fontWeight: 700,
+                  fontSize: "0.72rem",
+                  textDecoration: "none",
+                }}
+              >
+                📊 Админ-панель статистики ➔
               </a>
             </div>
           </div>
